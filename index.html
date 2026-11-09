@@ -1883,17 +1883,17 @@ function viewBank(f) {
   }
   // on a phone this screen is «Чеки»: receipts from Telegram first, the bank statement only if one was loaded on the computer
   return `${pageHead({html: '<span class="d-only">Банк</span><span class="m-only">Чеки</span>'}, openN ? `<span class="badge"><span class="dot"></span>${openN} ${plural(openN, 'платёж ждёт', 'платежа ждут', 'платежей ждут')} разноски</span>` : '',
-    `<label class="btn primary d-only" tabindex="0">${ico('upload')}Загрузить выписку CSV<input type="file" accept=".csv,text/csv,.txt" data-change="csvFile" hidden></label>`)}
+    `<label class="btn primary d-only" tabindex="0" title="CSV из любого банка или PDF-выписка Revolut">${ico('upload')}Загрузить выписку<input type="file" accept=".csv,text/csv,.txt,.pdf,application/pdf" data-change="csvFile" hidden></label>`)}
   ${tgSection(f)}
   ${all.length ? '' : '<div class="m-only s tip" style="margin:4px 2px">Выписку из банка загружают на компьютере. Здесь появятся её платежи, когда она будет.</div>'}
   <details class="help d-only"><summary>${ico('info')}Как скачать выписку</summary><ul class="small">
     <li><b>Банк</b> (Sparkasse, Volksbank, DKB, ING, N26, Commerzbank, Qonto…): в онлайн-банке «Umsätze» → «Export» → CSV.</li>
-    <li><b>Revolut</b>: в приложении счёт → «⋯» → «Выписка» (Statement) → Excel/CSV → период.</li>
+    <li><b>Revolut</b>: в приложении «Выписка» → период → PDF или Excel. Подходит любой из двух файлов.</li>
     <li><b>PayPal</b>: «Aktivitäten» → «Kontoauszüge» → CSV. Переводы PayPal → банк потом пропусти, чтобы не посчитать дважды.</li>
     <li>Повторная загрузка той же выписки дублей не создаёт.</li></ul></details>
   <div class="toolbar ${all.length ? '' : 'd-only'}"><label class="toggle"><input type="checkbox" data-change="inboxAll" ${UI.inboxAll ? 'checked' : ''}>Показать разнесённые и пропущенные</label>
     ${(() => { const n = inboxReady(f).length; return n ? `<button type="button" class="btn primary" data-act="inboxBulk" title="Записать все платежи, для которых категория уже известна">${ico('check')}Записать все с категорией (${n})</button>` : ''; })()}</div>
-  <div class="sheet oplist ${all.length ? '' : 'd-only'}">${list.length ? html : all.length ? empty('check', 'Все платежи разнесены', 'Новые появятся после следующей загрузки выписки.') : empty('bank', 'Выписка ещё не загружена', 'Скачай CSV в онлайн-банке и загрузи сюда: платежи появятся списком, останется разнести их по категориям.')}</div>`;
+  <div class="sheet oplist ${all.length ? '' : 'd-only'}">${list.length ? html : all.length ? empty('check', 'Все платежи разнесены', 'Новые появятся после следующей загрузки выписки.') : empty('bank', 'Выписка ещё не загружена', 'Скачай выписку в онлайн-банке (CSV, у Revolut можно PDF) и загрузи сюда: платежи появятся списком, останется разнести их по категориям.')}</div>`;
 }
 function parseCSV(text) {
   const sample = text.split(/\r?\n/).slice(0, 30).join('\n');
@@ -1922,17 +1922,92 @@ function analyzeCSV(rows) {
   const data = rows.slice(first).filter(r => r.length >= 3);
   const low = headers.map(h => h.toLowerCase());
   const find = (...res) => { for (const re of res) { const i = low.findIndex(h => re.test(h)); if (i > -1) return i; } return -1; };
-  let date = find(/buchungstag|buchungsdatum|^datum|booking date|^date/, /valuta|wertstellung|datum|date/);
+  // Revolut (EN/RU/DE): the date the money actually moved is «Completed Date»
+  let date = find(/completed date|дата заверш|дата выполн|abschlussdatum/, /buchungstag|buchungsdatum|^datum|booking date|^date|^дата$/, /valuta|wertstellung|datum|date|дата/);
   if (date < 0) date = (data[0] || []).findIndex(isDate);
-  let amount = find(/^betrag|betrag \(eur\)|^amount|^umsatz|^brutto|^netto|betrag/);
+  let amount = find(/^betrag|betrag \(eur\)|^amount|^umsatz|^brutto|^netto|betrag|^сумма/);
   if (amount < 0) amount = (data[0] || []).findIndex(v => /\d[.,]\d{2}$/.test(v) && !isDate(v));
   const debit = find(/^soll|^ausgang|debit/);
   const credit = find(/^haben|^eingang|credit/);
-  const text = find(/verwendungszweck/, /beschreibung|description|reference|zweck|betreff/, /buchungstext|^text/);
-  const cp = find(/beguenstigter|begünstigter|empfänger|auftraggeber|zahlungspflichtiger|^name|partner|payee|counterparty|gegenkonto/);
+  const text = find(/verwendungszweck/, /beschreibung|description|reference|zweck|betreff|описание|назначение/, /buchungstext|^text/);
+  const cp = find(/beguenstigter|begünstigter|empfänger|auftraggeber|zahlungspflichtiger|^name|partner|payee|counterparty|gegenkonto|контрагент|получатель|отправитель/);
   const catCol = find(/^kategorie|^category|^категория/);
-  const state = find(/^state$|^status$/);
-  return {headers, data, state, map: {date, amount: amount > -1 ? amount : credit, debit: amount > -1 ? -1 : debit, text, cp, cat: catCol}};
+  const state = find(/^state$|^status$|^состояние$|^статус$/);
+  const fee = find(/^fee$|^fees$|^комиссия$|^gebühr$|^gebühren$/); // Revolut puts its fee next to the amount
+  return {headers, data, state, fee, map: {date, amount: amount > -1 ? amount : credit, debit: amount > -1 ? -1 : debit, text, cp, cat: catCol}};
+}
+// Revolut PDF statement → the same rows as a CSV, then the usual import window
+const PDFJS = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/';
+let pdfjsLoading = null;
+function loadPdfJs() {
+  if (window.pdfjsLib) return Promise.resolve(window.pdfjsLib);
+  return pdfjsLoading || (pdfjsLoading = new Promise((res, rej) => {
+    const s = document.createElement('script'); s.src = PDFJS + 'pdf.min.js';
+    s.onload = () => { if (!window.pdfjsLib) { pdfjsLoading = null; return rej(new Error('модуль PDF не загрузился')); } window.pdfjsLib.GlobalWorkerOptions.workerSrc = PDFJS + 'pdf.worker.min.js'; res(window.pdfjsLib); };
+    s.onerror = () => { pdfjsLoading = null; rej(new Error('чтобы прочитать PDF, нужен интернет')); };
+    document.head.appendChild(s);
+  }));
+}
+const PDF_MON = {янв: 1, фев: 2, мар: 3, апр: 4, май: 5, мая: 5, июн: 6, июл: 7, авг: 8, сен: 9, окт: 10, ноя: 11, дек: 12,
+  jan: 1, feb: 2, mar: 3, apr: 4, may: 5, jun: 6, jul: 7, aug: 8, sep: 9, oct: 10, nov: 11, dec: 12, mär: 3, mai: 5, okt: 10, dez: 12};
+async function readStatementPDF(file) {
+  const lib = await loadPdfJs();
+  const pdf = await lib.getDocument({data: new Uint8Array(await file.arrayBuffer())}).promise;
+  // words → lines (same height on the page) → phrases (words that touch)
+  const lines = [];
+  for (let p = 1; p <= pdf.numPages; p++) {
+    const tc = await (await pdf.getPage(p)).getTextContent();
+    const its = tc.items.filter(i => i.str && i.str.trim()).map(i => ({x: i.transform[4], y: i.transform[5], w: i.width || 0, s: i.str}))
+      .sort((a, b) => b.y - a.y || a.x - b.x);
+    for (const it of its) { const l = lines[lines.length - 1]; if (l && l.p === p && Math.abs(l.y - it.y) <= 2.5) l.its.push(it); else lines.push({p, y: it.y, its: [it]}); }
+  }
+  for (const l of lines) {
+    l.its.sort((a, b) => a.x - b.x); l.ph = [];
+    for (const it of l.its) { const q = l.ph[l.ph.length - 1]; if (q && it.x - q.end < 4) { q.s += (it.x - q.end > 0.8 ? ' ' : '') + it.s; q.end = it.x + it.w; } else l.ph.push({x: it.x, end: it.x + it.w, s: it.s}); }
+    l.ph.forEach(q => { q.s = q.s.replace(/\s+/g, ' ').trim(); }); l.text = l.ph.map(q => q.s).join(' ');
+  }
+  const isAmt = s => /€/.test(s) && /^[−–-]?€?\s?[−–-]?\d[\d\s.,]*[.,]\d{2}\s?€?$/.test(s);
+  const clean = s => s.replace(/,\s*[A-Z]{2,3}$/, '').trim();
+  const rows = []; let col = null, on = true, cur = null, fresh = false;
+  const done = () => { if (cur && on && (cur.out || cur.in)) rows.push(cur); cur = null; };
+  for (const l of lines) {
+    const find = re => l.ph.find(q => re.test(q.s));
+    const d = find(/^(Описание|Description|Beschreibung)$/i), o = find(/^(Списания|Money out|Ausgang|Ausgänge|Belastung)/i), n = find(/^(Пополнения|Зачисления|Money in|Eingang|Eingänge|Gutschrift)/i);
+    if (d && o && n) { done(); col = {d: d.x, o: o.x, n: n.x, b: (find(/^(Остаток|Баланс|Balance|Saldo|Kontostand)/i) || {}).x}; continue; }
+    if (/^(Отклон|Отмен|Ожида|В ожидании|Reverted|Declined|Pending|Abgelehnt|Ausstehend|Storniert)/i.test(l.text)) { done(); on = false; continue; }
+    if (/^(Операции по сч|Account transactions|Transactions from|Kontoumsätze|Umsätze)/i.test(l.text)) { done(); on = true; continue; }
+    if (!col) continue;
+    const left = l.ph.filter(q => q.x < col.d - 2).map(q => q.s).join(' ');
+    const m = left.match(/^(\d{1,2})\.?\s*([^\s\d.]+)\.?\s*(\d{4})/);
+    if (m && PDF_MON[m[2].toLowerCase().slice(0, 3)]) {
+      done();
+      cur = {date: `${m[3]}-${pad(PDF_MON[m[2].toLowerCase().slice(0, 3)])}-${pad(+m[1])}`, desc: l.ph.filter(q => q.x >= col.d - 2 && q.x < Math.min(col.o, col.n) - 4 && !isAmt(q.s)).map(q => q.s).join(' '), out: 0, in: 0, to: '', from: '', ref: ''};
+      // amounts sit under «Списания» or «Пополнения»; anything far to the right is the running balance
+      const gap = Math.abs(col.n - col.o) || 80;
+      for (const q of l.ph.filter(q => isAmt(q.s))) {
+        const dOut = Math.abs(q.x - col.o), dIn = Math.abs(q.x - col.n), dBal = col.b != null ? Math.abs(q.x - col.b) : Infinity, best = Math.min(dOut, dIn, dBal);
+        if (best === dBal || best > gap * 0.6) continue;
+        const k = best === dOut ? 'out' : 'in';
+        if (!cur[k]) cur[k] = Math.abs(parseAmount(q.s));
+      }
+      fresh = true; continue;
+    }
+    if (!cur) continue;
+    const t = l.ph.filter(q => q.x >= col.d - 2).map(q => q.s).join(' ');
+    let k;
+    if ((k = t.match(/^(Получатель|To|Empfänger):\s*(.*)$/i))) cur.to = k[2];
+    else if ((k = t.match(/^(Отправитель|From|Absender):\s*(.*)$/i))) cur.from = k[2];
+    else if ((k = t.match(/^(Реквизиты|Reference|Verwendungszweck|Referenz):\s*(.*)$/i))) cur.ref = k[2];
+    else if (fresh && /-$/.test(cur.desc) && t && !/:/.test(t)) cur.desc += t; // a long name wrapped onto the next line
+    fresh = false;
+  }
+  done();
+  const data = rows.map(r => {
+    const cp = r.desc.replace(/^(Платеж от|Платёж от|Payment from|Zahlung von|Перевод от|Перевод для|Transfer from|Transfer to|To|An)\s+/i, '').trim();
+    const amount = r.in ? r.in : -r.out;
+    return [r.date, (amount < 0 ? '-' : '') + num2(Math.abs(amount)), cp, r.ref || clean(r.to || r.from) || r.desc];
+  });
+  return {headers: ['Дата', 'Сумма', 'Контрагент', 'Назначение'], data};
 }
 function openCSVMapping() {
   const {headers, data, map} = csvTemp;
@@ -2553,7 +2628,7 @@ const TOUR = [
   {sec: 'Счета', modal: 'invoice', sel: '#modal form[data-form=invPaid]', title: 'Отметить оплату',
     text: 'Когда деньги пришли, укажи дату и нажми кнопку. Счёт станет оплаченным, а доход запишется сам. Ещё проще это делается через банк, сейчас покажу.'},
   {sec: 'Банк', view: 'bank', sel: '#main .page-head .btn.primary', desktopOnly: true, title: 'Загрузить выписку',
-    text: 'Раз в месяц скачай CSV в онлайн-банке (Umsätze → Export) и загрузи сюда. Повторная загрузка дублей не создаёт. Под кнопкой «Как скачать выписку» есть подсказки для разных банков, Revolut и PayPal.'},
+    text: 'Раз в месяц скачай CSV в онлайн-банке (Umsätze → Export) и загрузи сюда. У Revolut подходит и обычная PDF-выписка. Повторная загрузка дублей не создаёт. Под кнопкой «Как скачать выписку» есть подсказки для разных банков, Revolut и PayPal.'},
   {sec: 'Банк', sel: '#main .op.bankrow', title: 'Разнести платежи',
     text: 'У каждого платежа свои кнопки. <b>Оплата RE-…</b> появляется сама, если сумма совпала с твоим счётом. <b>Разнести</b> открывает запись с готовой датой и суммой: остаётся выбрать категорию. <b>Пропустить</b>: личный платёж или перевод между своими счетами.'},
   {sec: 'Отчёты', view: 'reports', repTab: 'euer', sel: '#main .tabs', title: 'Отчёты',
@@ -2996,13 +3071,16 @@ const FORMS = {
       learnRule(f, b); DB.bookings.push(b); t.status = 'booked'; t.bookingId = b.id; direct++;
     };
     const findCat = (v, kind) => { v = String(v || '').trim().toLowerCase(); if (!v) return null; return catsFor(f).find(c => c.kind === kind && (c.id.toLowerCase() === v || c.label.toLowerCase() === v)) || null; };
+    const occ = new Map(); // two equal payments on one day (two scooter rides at 1,05 €) are two payments, not a duplicate
     for (const r of csvTemp.data) {
-      if (csvTemp.state > -1 && /revert|declin|fail|cancel|storn|abgelehnt|zurückg/i.test(r[csvTemp.state] || '')) { skipped++; continue; }
+      if (csvTemp.state > -1 && /revert|declin|fail|cancel|storn|abgelehnt|zurückg|отмен|отклон|возвращ|ошибк/i.test(r[csvTemp.state] || '')) { skipped++; continue; }
       const date = parseDate(r[m.date]); let amount = parseAmount(r[m.amount]);
       if (m.debit > -1) { const dv = parseAmount(r[m.debit]); amount = (isNaN(amount) ? 0 : amount) - (isNaN(dv) ? 0 : Math.abs(dv)); }
+      if (csvTemp.fee > -1) { const fv = parseAmount(r[csvTemp.fee]); if (!isNaN(fv) && fv) amount = (isNaN(amount) ? 0 : amount) - Math.abs(fv); }
       if (!date || isNaN(amount) || !amount) { bad++; continue; }
       const text = m.text > -1 ? (r[m.text] || '') : '', cp = m.cp > -1 ? (r[m.cp] || '') : '';
-      const key = [date, round2(amount), text, cp].join('|');
+      let key = [date, round2(amount), text, cp].join('|');
+      const nth = (occ.get(key) || 0) + 1; occ.set(key, nth); if (nth > 1) key += '#' + nth;
       const kind = amount < 0 ? 'out' : 'in', fromFile = m.cat > -1 ? findCat(r[m.cat], kind) : null;
       const rule = fromFile ? null : ruleFor(f, kind, cp, text);
       const c = fromFile || (rule ? cat(rule.cat) : null), rc = !fromFile && rule ? rule.rc : false;
@@ -3058,6 +3136,13 @@ const CHG = {
   },
   csvFile: async el => {
     const file = el.files[0]; el.value = ''; if (!file) return;
+    if (/\.pdf$/i.test(file.name) || file.type === 'application/pdf') {
+      toast('Читаю PDF…');
+      let st; try { st = await readStatementPDF(file); } catch (e) { console.warn(e); return toast('Не получилось прочитать PDF: ' + e.message, 'err'); }
+      if (!st.data.length) return toast('В этом PDF не нашлось операций. Программа читает PDF-выписки Revolut, для других банков скачай CSV.', 'err');
+      csvTemp = {headers: st.headers, data: st.data, state: -1, fee: -1, map: {date: 0, amount: 1, debit: -1, text: 3, cp: 2, cat: -1}};
+      return openCSVMapping();
+    }
     const buf = await file.arrayBuffer(); let text;
     try { text = new TextDecoder('utf-8', {fatal: true}).decode(buf); } catch (e) { text = new TextDecoder('windows-1252').decode(buf); }
     const rows = parseCSV(text.replace(/^﻿/, ''));

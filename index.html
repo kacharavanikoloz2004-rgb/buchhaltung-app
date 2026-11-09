@@ -2665,7 +2665,7 @@ const ACT = {
     catch (e) { toast('Не получилось: ' + e.message, 'err'); }
   },
   tgKeys: () => {
-    if (Store.mode === 'cloud') return toast('Пока данные в облаке, ключи менять нельзя: телефон и компьютер потеряют доступ. Сначала Настройки → Хранилище → «Отключить облако».', 'err');
+    if (Store.mode === 'cloud') return toast('Пока данные в облаке, ключи менять нельзя: телефон и компьютер потеряют доступ. Сначала Настройки → «Где лежат данные» → «Отключить облако на этом компьютере».', 'err');
     const abc ='abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789';
     const rnd = n => { const a = new Uint8Array(n); crypto.getRandomValues(a); return [...a].map(b => abc[b % abc.length]).join(''); };
     DB.tg = {...(DB.tg || {}), appSecret: rnd(32), tgSecret: rnd(32), linked: false, pair: ''};
@@ -2856,7 +2856,7 @@ const FORMS = {
     } catch (e) { toast('Не получилось: ' + e.message, 'err'); }
   },
   tgUrl: (fm, fd) => {
-    if (Store.mode === 'cloud' && tgCleanUrl(fd.get('url')) !== CLOUD.url) return toast('Пока данные в облаке, адрес функции менять нельзя. Сначала Настройки → Хранилище → «Отключить облако».', 'err');
+    if (Store.mode === 'cloud' && tgCleanUrl(fd.get('url')) !== CLOUD.url) return toast('Пока данные в облаке, адрес функции менять нельзя. Сначала Настройки → «Где лежат данные» → «Отключить облако на этом компьютере».', 'err');
     const url = tgCleanUrl(fd.get('url'));
     if (url === null) return toast('Не вижу адреса функции. Он выглядит так: https://xxxx.supabase.co/functions/v1/имя-функции. Скопируй его в Supabase: функция → вкладка Overview → строка под названием', 'err');
     DB.tg = {...(DB.tg || {}), url}; commit('tg.url'); toast(url ? 'Адрес сохранён' : 'Адрес удалён');

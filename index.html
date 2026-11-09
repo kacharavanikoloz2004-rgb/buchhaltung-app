@@ -2258,7 +2258,7 @@ function viewDashboardPrivate(f) {
   </section>
   <div class="cols">
     <section class="sheet" data-tour="spend"><div class="sheet-h"><h2>На что ушли деньги</h2><button class="btn sm ghost" data-act="nav" data-view="settings">${ico('sliders')}Бюджеты</button></div>
-      ${catRows || empty('receipt', 'Трат за этот месяц нет', 'Загрузи выписку в разделе «Банк» или добавь трату вручную.')}</section>
+      ${catRows || empty('receipt', 'Трат за этот месяц нет', 'Загрузи выписку из банка (CSV или PDF Revolut) или добавь трату вручную.', `<label class="btn primary d-only" tabindex="0">${ico('upload')}Загрузить выписку<input type="file" accept=".csv,text/csv,.txt,.pdf,application/pdf" data-change="csvFile" hidden></label>`)}</section>
     <div class="stack">
       <section class="sheet" data-tour="recurring"><div class="sheet-h"><h2>Регулярные платежи</h2>${rec.length ? `<span class="chip">~${money(recSum)} в месяц</span>` : ''}</div>
         ${rec.length ? `<ul class="mini">${rec.slice(0, 8).map(r => `<li><div style="min-width:0"><div class="t">${esc(r.name)}</div><div class="s">${esc(shortLabel(cat(r.cat)?.label || ''))}, ${r.months} ${plural(r.months, 'месяц', 'месяца', 'месяцев')}</div></div><span class="amt">~${money(r.avg)}</span></li>`).join('')}</ul>` : '<div class="s">Появятся, когда наберётся выписка хотя бы за 2 месяца.</div>'}</section>

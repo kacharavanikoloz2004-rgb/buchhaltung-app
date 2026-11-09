@@ -3072,12 +3072,14 @@ const FORMS = {
     };
     const findCat = (v, kind) => { v = String(v || '').trim().toLowerCase(); if (!v) return null; return catsFor(f).find(c => c.kind === kind && (c.id.toLowerCase() === v || c.label.toLowerCase() === v)) || null; };
     const occ = new Map(); // two equal payments on one day (two scooter rides at 1,05 €) are two payments, not a duplicate
+    let last = '';
     for (const r of csvTemp.data) {
       if (csvTemp.state > -1 && /revert|declin|fail|cancel|storn|abgelehnt|zurückg|отмен|отклон|возвращ|ошибк/i.test(r[csvTemp.state] || '')) { skipped++; continue; }
       const date = parseDate(r[m.date]); let amount = parseAmount(r[m.amount]);
       if (m.debit > -1) { const dv = parseAmount(r[m.debit]); amount = (isNaN(amount) ? 0 : amount) - (isNaN(dv) ? 0 : Math.abs(dv)); }
       if (csvTemp.fee > -1) { const fv = parseAmount(r[csvTemp.fee]); if (!isNaN(fv) && fv) amount = (isNaN(amount) ? 0 : amount) - Math.abs(fv); }
       if (!date || isNaN(amount) || !amount) { bad++; continue; }
+      if (date > last) last = date;
       const text = m.text > -1 ? (r[m.text] || '') : '', cp = m.cp > -1 ? (r[m.cp] || '') : '';
       let key = [date, round2(amount), text, cp].join('|');
       const nth = (occ.get(key) || 0) + 1; occ.set(key, nth); if (nth > 1) key += '#' + nth;
@@ -3095,8 +3097,12 @@ const FORMS = {
       else if (c) direct++;
       DB.inbox.push(t); added++;
     }
-    closeModal(); UI.view = 'bank'; commit('bank.import', `${added} новых`);
-    toast(`Импортировано: ${added}${direct ? ` (${isP(f) ? 'сразу записано' : 'с категорией'}: ${direct})` : ''}${dup ? `, дублей пропущено: ${dup}` : ''}${skipped ? `, отменённых пропущено: ${skipped}` : ''}${bad ? `, строк без даты/суммы: ${bad}` : ''}`);
+    // show the result: rows that were written go to «Операции» (and the overview jumps to that month), the rest waits in «Банк»
+    const P = isP(f), openN = DB.inbox.filter(t => t.firmId === f.id && t.status === 'open').length;
+    if (last) { UI.year = +last.slice(0, 4); if (P) UI.pMonth = +last.slice(5, 7); }
+    UI.bk = {month: '', kind: '', cat: '', q: '', nobeleg: false};
+    closeModal(); UI.view = P && direct && !openN ? 'bookings' : 'bank'; commit('bank.import', `${added} новых`); window.scrollTo(0, 0);
+    toast(`Импортировано: ${added}${direct ? ` (${P ? 'сразу записано' : 'с категорией'}: ${direct})` : ''}${dup ? `, дублей пропущено: ${dup}` : ''}${skipped ? `, отменённых пропущено: ${skipped}` : ''}${bad ? `, строк без даты/суммы: ${bad}` : ''}${P && direct ? (openN ? `. Записанные — в «Операциях», ${openN} ждут разноски здесь` : '. Они в «Операциях»') : ''}`);
   },
   firm: (fm, fd) => {
     const f = firm();

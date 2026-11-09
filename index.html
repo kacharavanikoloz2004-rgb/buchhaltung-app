@@ -109,6 +109,39 @@ code{font-size:.92em;background:var(--paper-3);padding:1px 5px;border-radius:5px
 .nav .ico{width:19px;height:19px}
 .nav .count{margin-left:auto;min-width:22px;height:20px;padding:0 6px;border-radius:999px;background:var(--accent);color:var(--accent-ink);font:600 12px/20px var(--din);text-align:center}
 .nav-gap{flex:1;min-height:16px}
+/* desktop vs phone: the phone gets a bottom bar and hides what is rare there */
+:root{--safe-b:max(env(safe-area-inset-bottom, 0px), var(--tg-safe-area-inset-bottom, 0px))}
+.m-only{display:none!important}
+.tb-more{display:contents}
+/* «Ещё» on the phone */
+.more-list{display:flex;flex-direction:column;gap:4px;margin-top:4px}
+.more-item{all:unset;box-sizing:border-box;cursor:pointer;display:grid;grid-template-columns:44px minmax(0,1fr) 18px;gap:14px;align-items:center;padding:9px 8px;border-radius:14px}
+.more-item:hover,.more-item:active{background:var(--paper-2)}
+.more-item:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.more-item>.ico:first-child{width:44px;height:44px;padding:11px;box-sizing:border-box;border-radius:12px;background:var(--accent-soft);color:var(--accent-text)}
+.more-item b{display:block;font-weight:600;font-size:15.5px;color:var(--ink)}
+.more-item .s{display:block;font-size:13px;color:var(--ink-3);margin-top:3px}
+.more-item>.ico:last-child{width:18px;height:18px;color:var(--ink-3)}
+/* overview: deadlines and limits in one line */
+.dlim{margin-top:16px;padding:6px 8px}
+.dlim-head{all:unset;box-sizing:border-box;cursor:pointer;display:flex;align-items:center;gap:8px 24px;flex-wrap:wrap;width:100%;padding:10px 12px;border-radius:12px}
+.dlim-head:hover{background:var(--paper-2)}
+.dlim-head:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.dlim-item{display:flex;align-items:center;gap:9px;min-width:0;color:var(--ink-2);font-size:14.5px;line-height:1.35}
+.dlim-item>.ico{color:var(--accent-text)}
+.dlim-item b{color:var(--ink);font-family:var(--din);font-weight:600}
+.dlim-item .s{color:var(--ink-3);font-size:13px;margin-left:3px;white-space:nowrap}
+.dlim-more{margin-left:auto;display:flex;align-items:center;gap:6px;color:var(--accent-text);font-weight:600;font-size:14px;white-space:nowrap}
+.dlim-more .ico{width:16px;height:16px;transform:rotate(90deg);transition:transform .15s ease}
+.dlim-head[aria-expanded=true] .dlim-more .ico{transform:rotate(-90deg)}
+.dlim-body{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(260px,100%),1fr));gap:22px 40px;padding:16px 12px 12px;border-top:1px solid var(--rule-2);margin-top:6px}
+.dlim-body h2{font-size:16px;margin:0 0 12px}
+/* bot that is already set up: a short status instead of the five steps */
+.ok-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.ok-list li{display:flex;gap:10px;align-items:flex-start;color:var(--ink-2)}
+.ok-list .ico{color:var(--in);margin-top:1px}
+/* hints switched off in the settings */
+html.no-hints .tip,html.no-hints .fine,html.no-hints details.help,html.no-hints .hint,html.no-hints .set-aside p{display:none!important}
 .side-foot{display:flex;gap:9px;align-items:flex-start;font-size:12.5px;color:var(--ink-3);padding:12px 8px 0;margin-top:8px;border-top:1px solid var(--rule-2);overflow-wrap:anywhere}
 .side-foot .ico{width:16px;height:16px;margin-top:2px}
 .side-foot .warn{color:var(--warn)}
@@ -418,6 +451,7 @@ fieldset:disabled .qchip{opacity:.5;cursor:default}
 .tour-hole{position:fixed;border-radius:12px;pointer-events:none;box-shadow:0 0 0 3px var(--accent),0 0 0 200vmax rgba(14,18,26,.55);transition:top .25s ease,left .25s ease,width .25s ease,height .25s ease}
 .tour-pop{position:fixed;top:0;left:0;width:360px;max-width:calc(100vw - 24px);background:var(--paper);color:var(--ink);border-radius:16px;box-shadow:var(--pop);padding:16px 18px 14px;transition:top .25s ease,left .25s ease}
 .tour-pop.sheet{top:auto;left:12px;right:12px;bottom:12px;width:auto;max-width:none}
+.tour-pop.sheet.up{top:12px;bottom:auto}
 .tour-bar{height:4px;border-radius:99px;background:var(--paper-3);overflow:hidden;margin-bottom:12px}
 .tour-bar i{display:block;height:100%;background:var(--accent);border-radius:99px;transition:width .25s ease}
 .tour-meta{display:flex;justify-content:space-between;align-items:center;gap:8px;font:500 13px/1 var(--din);color:var(--ink-3);margin-bottom:10px}
@@ -462,17 +496,30 @@ fieldset:disabled .qchip{opacity:.5;cursor:default}
   .spine .hole{width:10px;height:10px;margin-left:-5px;bottom:7px;box-shadow:inset 0 1px 2px rgba(0,0,0,.35),0 0 0 2px rgba(255,255,255,.2)}
   .spine.add{height:54px}
   .firm-head{padding:0 0 4px}
-  .nav{flex-direction:row;overflow-x:auto;margin-top:12px;gap:4px;scrollbar-width:none;flex:none}
-  .nav::-webkit-scrollbar{display:none}
-  .nav button{flex:none;height:36px;padding:0 12px;gap:8px;white-space:nowrap}
+  .nav{position:fixed;left:0;right:0;bottom:0;z-index:45;margin:0;flex:none;flex-direction:row;justify-content:space-around;gap:2px;
+    background:var(--paper);border-top:1px solid var(--rule);padding:5px 6px calc(5px + var(--safe-b));box-shadow:0 -6px 18px rgba(14,18,26,.06)}
+  .nav button{flex:1 1 0;min-width:0;flex-direction:column;justify-content:center;height:56px;padding:2px;gap:3px;font-size:12px;font-weight:600;border-radius:12px;position:relative;white-space:nowrap}
+  .nav button:hover{background:transparent}
+  .nav button.active{background:transparent;color:var(--accent-text)}
+  .nav .ico{width:22px;height:22px;padding:4px 16px;box-sizing:content-box;border-radius:999px;transition:background .15s ease}
+  .nav button.active .ico{background:var(--accent-soft)}
+  .nav .count{position:absolute;top:1px;left:calc(50% + 6px);margin:0;min-width:18px;height:18px;padding:0 5px;font-size:11px;line-height:18px}
+  .nav button.m-only{display:flex!important}
+  .btn.m-only{display:inline-flex!important} span.m-only{display:inline!important} div.m-only{display:block!important}
+  .d-only{display:none!important}
+  .tb-more{display:none} .tb-more.open{display:contents}
   .nav-gap,.side-foot{display:none}
-  #main{padding:20px 16px 96px}
+  #main{padding:20px 16px calc(170px + var(--safe-b))}
+  #toast{bottom:calc(84px + var(--safe-b))}
+  .months{height:112px}
+  .toolbar .seg label{padding:0 11px}
+  .page-head.m-hide{display:none}
   h1{font-size:26px}
   .page-head{align-items:flex-start}
-  .fab{display:grid;place-items:center;position:fixed;right:18px;bottom:18px;width:58px;height:58px;border-radius:18px;border:0;background:var(--accent);color:var(--accent-ink);box-shadow:var(--pop);z-index:40;cursor:pointer}
+  .fab{display:grid;place-items:center;position:fixed;right:18px;bottom:calc(80px + var(--safe-b));width:58px;height:58px;border-radius:18px;border:0;background:var(--accent);color:var(--accent-ink);box-shadow:var(--pop);z-index:40;cursor:pointer}
   .fab .ico{width:26px;height:26px}
   #modal{padding:0;align-items:flex-end}
-  .modal-box{border-radius:20px 20px 0 0;max-height:94vh;overflow-y:auto;padding:18px 18px 16px;animation:sheet .22s ease-out}
+  .modal-box{border-radius:20px 20px 0 0;max-height:94vh;overflow-y:auto;padding:18px 18px calc(16px + var(--safe-b));animation:sheet .22s ease-out}
   @keyframes sheet{from{transform:translateY(30px);opacity:.6}}
 }
 @media (max-width:620px){
@@ -578,6 +625,7 @@ const ICONS = {
   percent: '<path d="M18 6 6 18"/><circle cx="7.5" cy="7.5" r="2.2"/><circle cx="16.5" cy="16.5" r="2.2"/>',
   store: '<path d="M4 9h16l-1.2 11H5.2z"/><path d="M8.5 9V7a3.5 3.5 0 0 1 7 0v2"/>',
   lock: '<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>',
+  more: '<circle cx="5.5" cy="12" r="1.6" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.6" fill="currentColor" stroke="none"/><circle cx="18.5" cy="12" r="1.6" fill="currentColor" stroke="none"/>',
 };
 const ico = (n, cls = '') => `<svg class="ico ${cls}" viewBox="0 0 24 24" aria-hidden="true" focusable="false">${ICONS[n] || ''}</svg>`;
 
@@ -588,7 +636,7 @@ const binderKey = f => BINDERS[f.color] ? f.color : ({einzel: 'blau', kapital: '
 const firmColor = f => BINDERS[binderKey(f)].hex;
 const firmShort = f => f.type === 'privat' ? 'Личное' : f.type === 'kapital' ? (/gmbh/i.test(f.name || '') ? 'GmbH' : 'УГ') : 'ИП';
 const firmKind = f => f.type === 'privat' ? 'Личные финансы' : f.type === 'kapital' ? 'УГ / GmbH' : f.kleinunternehmer ? 'ИП без НДС (Kleinunternehmer)' : 'ИП с НДС';
-const pageHead = (title, sub = '', tools = '') => `<header class="page-head"><div><h1>${esc(title)}</h1>${sub ? `<div class="sub">${sub}</div>` : ''}</div>${tools ? `<div class="tools">${tools}</div>` : ''}</header>`;
+const pageHead = (title, sub = '', tools = '') => `<header class="page-head"><div><h1>${title && title.html ? title.html : esc(title)}</h1>${sub ? `<div class="sub">${sub}</div>` : ''}</div>${tools ? `<div class="tools">${tools}</div>` : ''}</header>`;
 const empty = (icon, title, text, actions = '') => `<div class="empty">${ico(icon, 'big')}<div class="t">${title}</div><div class="s">${text}</div>${actions ? `<div class="tools" style="justify-content:center;margin-top:16px">${actions}</div>` : ''}</div>`;
 
 function parseAmount(s) {
@@ -1108,14 +1156,15 @@ function memHint(fm, r) {
   el.innerHTML = `${ico('repeat')}<span>Из памяти: обычно «${esc(c ? shortLabel(c.label) : r.cat)}»${r.rc ? ', с Reverse Charge' : ''}.${st.n ? ` Уже ${st.n} ${plural(st.n, 'запись', 'записи', 'записей')}, последняя ${fmtDate(st.last.date)} на ${money(st.last.gross)}.` : ''}</span>`;
 }
 function rulesCard(f) {
-  const rules = Object.entries(f.rules || {}).sort((a, b) => a[1].name.localeCompare(b[1].name));
+  const all = Object.entries(f.rules || {}).sort((a, b) => a[1].name.localeCompare(b[1].name));
+  const rules = UI.rulesAll ? all : all.slice(0, 6); // a long list opens on demand
   const rows = rules.map(([k, r]) => `<div class="rule-row">
     <div class="rule-name"><b>${esc(r.name)}</b><span class="s">${r.kind === 'in' ? 'доход' : 'расход'}${r.last ? ', последний раз ' + fmtDate(r.last) : ''}</span></div>
     <select data-change="ruleCat" data-key="${esc(k)}" aria-label="Категория для ${esc(r.name)}">${catsFor(f).filter(c => c.kind === r.kind).map(c => `<option value="${c.id}" ${c.id === r.cat ? 'selected' : ''}>${c.ic}  ${esc(c.label)}</option>`).join('')}</select>
     ${!isP(f) && r.kind === 'out' ? `<label class="toggle" title="Reverse Charge"><input type="checkbox" data-change="ruleRc" data-key="${esc(k)}" ${r.rc ? 'checked' : ''}>§13b</label>` : '<span></span>'}
     <button type="button" class="x" data-act="ruleDel" data-key="${esc(k)}" title="Забыть" aria-label="Забыть ${esc(r.name)}">${ico('x')}</button></div>`).join('');
   return `<section class="sheet settings" style="margin-top:16px">${sec('Память категорий', 'Программа запоминает, какую категорию ты выбрал для контрагента, и в следующий раз подставляет её сама: в новых записях, выписках из банка и чеках из Telegram. Здесь можно исправить или забыть.',
-    rows ? `<div class="rules">${rows}</div>` : '<div class="s">Пока пусто. Память заполняется сама, когда сохраняешь операцию с заполненным полем «Кому / от кого».</div>')}</section>`;
+    rows ? `<div class="rules">${rows}</div>${all.length > 6 ? `<div style="margin-top:12px"><button type="button" class="btn sm" data-act="rulesAll">${UI.rulesAll ? 'Свернуть' : `Показать все (${all.length})`}</button></div>` : ''}` : '<div class="s">Пока пусто. Память заполняется сама, когда сохраняешь операцию с заполненным полем «Кому / от кого».</div>')}</section>`;
 }
 const kzOf = (c, f) => typeof c.kz === 'function' ? c.kz(f) : c.kz;
 const deOf = (c, f) => typeof c.de === 'function' ? c.de(f) : c.de;
@@ -1311,20 +1360,25 @@ const monthStep = () => `<div class="stepper" role="group" aria-label="Меся�
 /* ============================== render ============================== */
 function sidebar(f) {
   const inboxN = DB.inbox.filter(t => t.firmId === f.id && t.status === 'open').length + (DEMO ? 0 : TG.items.length);
-  const item = (v, icon, label, extra = '') => `<button type="button" data-act="nav" data-view="${v}" class="${UI.view === v ? 'active' : ''}" ${UI.view === v ? 'aria-current="page"' : ''}>${ico(icon)}<span>${label}</span>${extra}</button>`;
+  // clients live inside «Счета», the guide inside «Настройки»; on a phone the rare sections sit under «Ещё»
+  const on = v => UI.view === v || (v === 'invoices' && UI.view === 'customers') || (v === 'settings' && UI.view === 'guide');
+  const item = (v, icon, label, extra = '', cls = '') => `<button type="button" data-act="nav" data-view="${v}" class="${cls} ${on(v) ? 'active' : ''}" ${on(v) ? 'aria-current="page"' : ''}>${ico(icon)}<span>${label}</span>${extra}</button>`;
+  const count = inboxN ? `<span class="count">${inboxN}</span>` : '';
+  const moreOn = ['invoices', 'customers', 'reports', 'settings', 'guide'].includes(UI.view);
   const spines = DB.firms.map(x => `<button type="button" class="spine ${x.id === f.id ? 'on' : ''}" style="--c:${firmColor(x)}" data-act="firmSwitch" data-id="${x.id}" title="${esc(x.name || firmShort(x))}" aria-label="Профиль: ${esc(x.name || firmShort(x))}" aria-pressed="${x.id === f.id}"><span class="label">${esc(firmShort(x))}</span><span class="hole"></span></button>`).join('');
   const store = Store.mode === 'cloud'
     ? (TGWA ? 'Облако, общие данные с компьютером' : `Облако${Store.dir ? (Store.mirrorOk ? `, копия в папке «${esc(Store.dir.name)}»` : `<br><button type="button" class="linkbtn" data-act="mirrorOn">Копия в папке на паузе: включить</button>`) : ''}`)
     : Store.mode === 'folder' ? `Папка «${esc(Store.dir?.name || '')}»` : `<span class="warn">Данные только в браузере</span>`;
   return `<div class="side-top"><div class="binders">${spines}<button type="button" class="spine add" data-act="addProfile" title="Добавить профиль" aria-label="Добавить профиль">${ico('plus')}</button></div>
     <div class="firm-head"><div class="firm-name">${esc(f.name || 'Без названия')}</div><div class="firm-kind">${firmKind(f)}</div></div></div>
-  <nav class="nav" aria-label="Разделы">${item('dashboard', 'home', 'Обзор')}${item('bookings', 'arrows', 'Операции')}${isP(f) ? '' : item('invoices', 'file', 'Счета') + item('customers', 'users', 'Клиенты')}${item('bank', 'bank', 'Банк', inboxN ? `<span class="count">${inboxN}</span>` : '')}${item('reports', 'chart', 'Отчёты')}<span class="nav-gap"></span>${item('settings', 'sliders', 'Настройки')}${item('guide', 'book', 'Обучение')}</nav>
+  <nav class="nav" aria-label="Разделы">${item('dashboard', 'home', 'Обзор')}${item('bookings', 'arrows', 'Операции')}${isP(f) ? '' : item('invoices', 'file', 'Счета', '', 'd-only')}${item('bank', 'bank', 'Банк', count, 'd-only')}${item('bank', 'receipt', 'Чеки', count, 'm-only')}${item('reports', 'chart', 'Отчёты', '', 'd-only')}<span class="nav-gap"></span>${item('settings', 'sliders', 'Настройки', '', 'd-only')}<button type="button" class="m-only ${moreOn ? 'active' : ''}" data-act="more" aria-haspopup="dialog">${ico('more')}<span>Ещё</span></button></nav>
   <div class="side-foot">${ico('folder')}<div><div>${store}</div><div id="saveState">${lastSave}</div></div></div>`;
 }
 function render() {
   const f = firm(); UI.firmId = f.id;
   if (isP(f) && ['invoices', 'customers'].includes(UI.view)) UI.view = 'dashboard';
   document.documentElement.style.setProperty('--binder', firmColor(f));
+  document.documentElement.classList.toggle('no-hints', !DEMO && !!DB.prefs && DB.prefs.hints === false);
   $('#side').innerHTML = sidebar(f);
   const V = {dashboard: viewDashboard, bookings: viewBookings, invoices: viewInvoices, customers: viewCustomers, bank: viewBank, reports: viewReports, settings: viewSettings, guide: viewGuide}[UI.view] || viewDashboard;
   $('#main').innerHTML = V(f);
@@ -1358,25 +1412,45 @@ function viewDashboard(f) {
   if (s.noBeleg) tasks.push({lvl: 'warn', icon: 'receipt', t: `${s.noBeleg} ${plural(s.noBeleg, 'операция', 'операции', 'операций')} без чека`, s: 'На каждую операцию нужен документ', act: btn('Показать', 'showNoBeleg')});
   const big = activeBookings(f, y).filter(b => b.kind === 'out' && ['gwg', 'edv', 'buero', 'sonstige'].includes(b.category) && (f.kleinunternehmer ? b.gross : split(b, f).net) > 800);
   if (big.length) tasks.push({lvl: 'warn', icon: 'alert', t: `${big.length} ${plural(big.length, 'покупка', 'покупки', 'покупок')} дороже 800 €`, s: 'Скорее всего, нужна амортизация, а не списание сразу', act: btn('Проверить', 'bkOpen', `data-id="${big[0].id}"`)});
+  // limits of the year; when one is close, or a deadline is under two weeks away, it becomes a task
+  const L = [];
+  if (f.kleinunternehmer) {
+    const um = kuUmsatz(f, y);
+    L.push({name: 'Kleinunternehmer', val: um, of: '25 000 €', pct: um / 250, note: um > 25000 ? `Порог превышен: с ${y + 1} нужен НДС` : `Если не больше, в ${y + 1} тоже без НДС`,
+      task: um > 25000 ? ['bad', 'Порог Kleinunternehmer превышен', `${money(um)} выручки за ${y}: со следующего года нужен НДС. Обсуди переход со Steuerberater`]
+        : ['warn', 'Выручка близко к порогу Kleinunternehmer', `${money(um)} из 25 000 €. Если за год будет больше, со следующего года нужен НДС`]});
+    L.push({name: 'Жёсткий лимит года', val: um, of: '100 000 €', pct: um / 1000, note: 'Выше него НДС начинается сразу',
+      task: ['bad', 'Выручка близко к 100 000 €', 'Выше этой суммы НДС начинается сразу, с той же продажи. Обсуди со Steuerberater']});
+  }
+  if (f.type === 'einzel') L.push({name: 'Gewerbesteuer', val: Math.max(0, s.profit), of: '24 500 €', pct: s.profit / 245, note: s.profit > 24500 ? 'Выше порога: нужна декларация Gewerbesteuer' : 'До этой прибыли Gewerbesteuer не платится',
+    task: ['warn', 'Прибыль близко к порогу Gewerbesteuer', `${money(Math.max(0, s.profit))} из 24 500 €. Выше порога нужны декларация и налог Gewerbesteuer`]});
+  if (y === nowY) for (const l of L) if (l.pct >= 80) tasks.push({lvl: l.task[0], icon: 'percent', t: l.task[1], s: l.task[2]});
+  const dls = deadlines(f);
+  for (const d of dls) { const n = daysUntil(d.date); if (n >= 0 && n <= 14) tasks.push({lvl: n <= 3 ? 'bad' : 'warn', icon: 'clock', t: d.text, s: `${relDays(n)[0].toUpperCase() + relDays(n).slice(1)}, ${fmtDate(d.date)}${d.note ? '. ' + d.note : ''}`}); }
   const todo = tasks.length ? tasks.map(x => `<li><span class="tic ${x.lvl}">${ico(x.icon)}</span><div><div class="t">${x.t}</div><div class="s">${x.s}</div></div>${x.act || ''}</li>`).join('')
     : `<li><span class="tic ok">${ico('check')}</span><div><div class="t">Всё разнесено</div><div class="s">Новых задач нет. Загляни после следующей выписки.</div></div></li>`;
   const curM = y === nowY && (s.in || s.out) ? new Date().getMonth() : -1;
   const max = Math.max(1, ...s.months.flatMap(m => [m.in, m.out]));
   const months = s.months.map((m, i) => `<div class="mcol ${i === curM ? 'now' : ''}" title="${MONTHS[i]}: доходы ${money(m.in)}, расходы ${money(m.out)}"><div class="mbars"><i class="b-in" style="height:${m.in / max * 100}%"></i><i class="b-out" style="height:${m.out / max * 100}%"></i></div><span>${MSH[i]}</span></div>`).join('');
-  const limit = (name, val, of, pct, note) => { const cls = pct >= 100 ? 'bad' : pct >= 80 ? 'warn' : ''; return `<div class="limit"><div class="row1"><span class="name">${name}</span><span class="val">${money(val)} <span class="of">из ${of}</span></span></div><div class="meter"><i class="${cls}" style="width:${Math.max(0, Math.min(100, pct))}%"></i></div><div class="s">${note}</div></div>`; };
-  let limits = '';
-  if (f.kleinunternehmer) {
-    const um = kuUmsatz(f, y);
-    limits += limit('Kleinunternehmer', um, '25 000 €', um / 250, um > 25000 ? `Порог превышен: с ${y + 1} нужен НДС` : `Если не больше, в ${y + 1} тоже без НДС`);
-    limits += limit('Жёсткий лимит года', um, '100 000 €', um / 1000, 'Выше него НДС начинается сразу');
-  }
-  if (f.type === 'einzel') limits += limit('Gewerbesteuer', Math.max(0, s.profit), '24 500 €', s.profit / 245, s.profit > 24500 ? 'Выше порога: нужна декларация Gewerbesteuer' : 'До этой прибыли Gewerbesteuer не платится');
-  const dl = deadlines(f).slice(0, 4).map(d => {
+  const limit = l => { const cls = l.pct >= 100 ? 'bad' : l.pct >= 80 ? 'warn' : ''; return `<div class="limit"><div class="row1"><span class="name">${l.name}</span><span class="val">${money(l.val)} <span class="of">из ${l.of}</span></span></div><div class="meter"><i class="${cls}" style="width:${Math.max(0, Math.min(100, l.pct))}%"></i></div><div class="s">${l.note}</div></div>`; };
+  const limits = L.map(limit).join('');
+  const dl = dls.slice(0, 4).map(d => {
     const n = daysUntil(d.date), soon = n <= 14, dt = new Date(d.date + 'T12:00:00');
     return `<li><div class="date-tile ${soon ? 'soon' : ''}"><b>${dt.getDate()}</b><span>${MSH[dt.getMonth()]}${dt.getFullYear() !== nowY ? ' ’' + String(dt.getFullYear()).slice(2) : ''}</span></div><div><div class="t">${esc(d.text)}</div><div class="s">${esc(d.note)}</div></div><span class="rel ${soon ? 'soon' : ''}">${relDays(n)}</span></li>`;
   }).join('');
   const sub = `<span class="badge"><span class="dot"></span>${f.type === 'einzel' ? 'Einzelunternehmen, EÜR' : 'Kapitalgesellschaft'}</span><span class="badge">${f.kleinunternehmer ? 'Kleinunternehmer §19' : 'с НДС'}</span>`;
-  return `${pageHead(f.name || 'Обзор', sub, `<button class="btn primary" data-act="bkNew" data-kind="out">${ico('plus')}Расход</button><button class="btn" data-act="bkNew" data-kind="in">${ico('plus')}Доход</button><button class="btn" data-act="invNew">${ico('file')}Новый счёт</button>`)}
+  // one line instead of two blocks: the nearest deadline and the main limit; the rest opens on a tap
+  const next = dls[0], lim = L[0];
+  const strip = `<section class="sheet dlim" data-tour="dlim">
+    <button type="button" class="dlim-head" data-act="dashMore" aria-expanded="${UI.dashMore ? 'true' : 'false'}">
+      <span class="dlim-item">${ico('clock')}<span>${next ? `<b>${fmtDate(next.date).slice(0, 5)}</b> ${esc(next.text)} <span class="s">${relDays(daysUntil(next.date))}</span>` : 'Ближайших сроков нет'}</span></span>
+      ${lim ? `<span class="dlim-item">${ico('percent')}<span>${lim.name}: <b>${Math.max(0, Math.round(lim.pct))}%</b> <span class="s">из ${lim.of}</span></span></span>` : ''}
+      <span class="dlim-more">${UI.dashMore ? 'Свернуть' : 'Все сроки и лимиты'}${ico('chevR')}</span>
+    </button>
+    ${UI.dashMore ? `<div class="dlim-body"><div data-tour="deadlines"><h2>Сроки</h2><ul class="dl">${dl}</ul><div class="s tip" style="margin-top:10px">Даты без учёта праздников.</div></div>${limits ? `<div data-tour="limits"><h2>Лимиты ${y}</h2>${limits}</div>` : ''}</div>` : ''}
+  </section>`;
+  // on a phone the firm name is already at the top of the screen: no second heading
+  return `${pageHead(f.name || 'Обзор', sub, `<button class="btn primary d-only" data-act="bkNew" data-kind="out">${ico('plus')}Расход</button><button class="btn d-only" data-act="bkNew" data-kind="in">${ico('plus')}Доход</button>`).replace('class="page-head"', 'class="page-head m-hide"')}
   <section class="sheet hero" aria-label="Итоги года">
     <div>
       <div class="hero-top"><span class="lbl">Прибыль за ${y}</span>${yearSelect()}</div>
@@ -1389,13 +1463,8 @@ function viewDashboard(f) {
     </div>
     <div class="hero-chart"><div class="months">${months}</div><div class="legend"><span><i style="background:var(--in)"></i>доходы</span><span><i style="background:var(--bar-out)"></i>расходы</span></div></div>
   </section>
-  <div class="cols">
-    <section class="sheet" data-tour="todo"><div class="sheet-h"><h2>Нужно сделать</h2>${tasks.length ? `<span class="chip ${tasks.some(x => x.lvl === 'bad') ? 'bad' : 'warn'}">${tasks.length}</span>` : ''}</div><ul class="todo">${todo}</ul></section>
-    <div class="stack">
-      <section class="sheet" data-tour="deadlines"><div class="sheet-h"><h2>Сроки</h2></div><ul class="dl">${dl}</ul><div class="s" style="margin-top:10px">Даты без учёта праздников.</div></section>
-      ${limits ? `<section class="sheet" data-tour="limits"><div class="sheet-h"><h2>Лимиты ${y}</h2></div>${limits}</section>` : ''}
-    </div>
-  </div>`;
+  <section class="sheet" data-tour="todo" style="margin-top:16px"><div class="sheet-h"><h2>Нужно сделать</h2>${tasks.length ? `<span class="chip ${tasks.some(x => x.lvl === 'bad') ? 'bad' : 'warn'}">${tasks.length}</span>` : ''}</div><ul class="todo">${todo}</ul></section>
+  ${strip}`;
 }
 const plural = (n, a, b, c) => { const m10 = n % 10, m100 = n % 100; return m10 === 1 && m100 !== 11 ? a : (m10 >= 2 && m10 <= 4 && (m100 < 10 || m100 >= 20) ? b : c); };
 
@@ -1404,13 +1473,17 @@ function viewBookings(f) {
   const F = UI.bk, P = isP(f);
   const cats = catsFor(f).filter(c => !F.kind || c.kind === F.kind);
   const kindSeg = [['', 'Все'], ['in', P ? 'Поступления' : 'Доходы'], ['out', P ? 'Траты' : 'Расходы']].map(([v, l]) => `<label><input type="radio" name="kind" value="${v}" data-change="bkFilter" ${F.kind === v ? 'checked' : ''}>${l}</label>`).join('');
-  return `${pageHead(P ? 'Поступления и траты' : 'Операции', '', `${yearSelect()}<button class="btn" data-act="bkNew" data-kind="in">${ico('plus')}${P ? 'Поступление' : 'Доход'}</button><button class="btn primary" data-act="bkNew" data-kind="out">${ico('plus')}${P ? 'Трата' : 'Расход'}</button>`)}
+  const nF = (F.month ? 1 : 0) + (F.cat ? 1 : 0) + (F.nobeleg ? 1 : 0);
+  return `${pageHead(P ? 'Поступления и траты' : 'Операции', '', `${yearSelect()}<button class="btn d-only" data-act="bkNew" data-kind="in">${ico('plus')}${P ? 'Поступление' : 'Доход'}</button><button class="btn primary d-only" data-act="bkNew" data-kind="out">${ico('plus')}${P ? 'Трата' : 'Расход'}</button>`)}
   <div class="toolbar">
     <label class="search">${ico('search')}<input type="search" name="q" placeholder="Поиск: описание, кому, сумма" value="${esc(F.q)}" data-input="bkSearch" aria-label="Поиск"></label>
     <div class="seg" role="radiogroup" aria-label="Тип операций">${kindSeg}</div>
+    <button type="button" class="btn m-only ${nF ? 'primary' : ''}" data-act="bkF" aria-expanded="${UI.bkF ? 'true' : 'false'}">${ico('sliders')}Фильтры${nF ? ` · ${nF}` : ''}</button>
+    <div class="tb-more ${UI.bkF ? 'open' : ''}">
     <select name="month" data-change="bkFilter" aria-label="Месяц"><option value="">Весь год</option>${MONTHS.map((m, i) => `<option value="${pad(i + 1)}" ${F.month === pad(i + 1) ? 'selected' : ''}>${m}</option>`).join('')}</select>
     <select name="cat" data-change="bkFilter" aria-label="Категория"><option value="">Все категории</option>${cats.map(c => `<option value="${c.id}" ${F.cat === c.id ? 'selected' : ''}>${c.ic}  ${esc(c.label)}</option>`).join('')}</select>
     ${P ? '' : `<label class="toggle"><input type="checkbox" name="nobeleg" data-change="bkFilter" ${F.nobeleg ? 'checked' : ''}>Без чека</label>`}
+    </div>
   </div>
   <div id="bkTable">${bookingsTable(f)}</div>
   ${P ? '' : `<p class="fine">${ico('receipt')}<span>${TGWA ? 'Чек можно сфотографировать прямо в форме расхода.' : 'Перетащи файл чека в окно, и откроется новый расход.'} Записи не удаляются: ошибку исправляют или сторнируют.</span></p>`}`;
@@ -1502,7 +1575,7 @@ function openBooking(id, preset = {}) {
       </div>
       <div class="mem-hint" aria-live="polite"></div>
       <div class="rc-wrap" ${d.kind === 'out' && !P ? '' : 'hidden'}>
-        <label class="check rc"><input type="checkbox" name="reverseCharge" ${d.reverseCharge ? 'checked' : ''}><span><b>Reverse Charge (§13b)</b><span class="s" style="display:block">Фирма из другой страны ЕС (Google, Meta, Etsy…), в счёте нет немецкого НДС. Тогда 19% НДС платишь ты, даже как Kleinunternehmer.</span></span></label>
+        <label class="check rc"><input type="checkbox" name="reverseCharge" ${d.reverseCharge ? 'checked' : ''}><span><b>Reverse Charge (§13b)</b><span class="s tip" style="display:block">Фирма из другой страны ЕС (Google, Meta, Etsy…), в счёте нет немецкого НДС. Тогда 19% НДС платишь ты, даже как Kleinunternehmer.</span></span></label>
       </div>
       <div class="gwg-hint note" hidden></div>
       <label class="drop" data-drop="1"><span class="dz-ic">${ico('receipt')}</span><input type="file" accept="image/*,application/pdf" data-change="bkFile"><span class="drop-text">${b?.beleg ? `Чек: <b>${esc(b.beleg.name)}</b><br><span class="s">Нажми, чтобы заменить</span>` : `<b>Добавить чек</b><br><span class="s">Перетащи фото или PDF сюда или нажми, чтобы выбрать</span>`}</span></label>
@@ -1546,6 +1619,8 @@ async function saveBeleg(f, date, file) {
 }
 
 /* ---------- invoices ---------- */
+// clients are a tab of «Счета»: they only matter for invoices
+const invTabs = () => `<div class="tabs" role="tablist" aria-label="Счета и клиенты">${[['invoices', 'Счета'], ['customers', 'Клиенты']].map(([v, l]) => `<button type="button" role="tab" aria-selected="${UI.view === v}" data-act="nav" data-view="${v}" class="${UI.view === v ? 'active' : ''}">${l}</button>`).join('')}</div>`;
 function viewInvoices(f) {
   const list = DB.invoices.filter(i => i.firmId === f.id).sort((a, b) => (b.date || '').localeCompare(a.date || '') || (b.number || '').localeCompare(a.number || ''));
   const open = openInvoices(f), openSum = round2(open.reduce((a, i) => a + invTotals(i, f).gross, 0));
@@ -1559,7 +1634,7 @@ function viewInvoices(f) {
       <div class="op-doc"><span class="chip ${cls}">${st}</span></div>
       <div><div class="amt">${money(t.gross)}</div><div class="sub2">${when}</div></div></div>`;
   }).join('');
-  return `${pageHead('Счета', '', `<button class="btn primary" data-act="invNew">${ico('plus')}Новый счёт</button>`)}
+  return `${pageHead('Счета', '', `<button class="btn primary" data-act="invNew">${ico('plus')}Новый счёт</button>`)}${invTabs()}
   ${list.length ? `<div class="sumstrip"><div class="fig"><span class="l">Ждут оплаты</span><span class="v">${money(openSum)}</span></div>${overdueSum ? `<div class="fig"><span class="l">Из них просрочено</span><span class="v out">${money(overdueSum)}</span></div>` : ''}<div class="fig"><span class="l">Всего счетов</span><span class="v">${list.length}</span></div></div>` : ''}
   ${f.kleinunternehmer ? `<details class="help"><summary>${ico('info')}Счета для Kleinunternehmer</summary><p class="small" style="margin:0">В счетах нет НДС, внизу автоматически добавляется фраза по §19 UStG. Выставлять E-Rechnung (XML) не обязательно, но принимать такие счета от поставщиков нужно уметь: достаточно e-mail, на который они приходят.</p></details>` : ''}
   <div class="sheet oplist">${list.length ? rows : empty('file', 'Счетов пока нет', 'Для продаж на площадках счёт обычно не нужен. Он нужен, когда продаёшь фирме напрямую или покупатель его просит.', `<button class="btn primary" data-act="invNew">${ico('plus')}Новый счёт</button>`)}</div>`;
@@ -1758,7 +1833,7 @@ function viewCustomers(f) {
       <div class="op-doc"><span class="chip">${invs.length} ${plural(invs.length, 'счёт', 'счёта', 'счетов')}</span></div>
       <div class="amt">${money(sum)}</div></div>`;
   }).join('');
-  return `${pageHead('Клиенты', '', `<button class="btn primary" data-act="custEdit">${ico('plus')}Клиент</button>`)}
+  return `${pageHead('Клиенты', '', `<button class="btn primary" data-act="custEdit">${ico('plus')}Клиент</button>`)}${invTabs()}
   <div class="sheet oplist">${list.length ? rows : empty('users', 'Клиентов пока нет', 'Они появятся здесь сами, когда выставишь первый счёт.', `<button class="btn" data-act="custEdit">${ico('plus')}Добавить клиента</button>`)}</div>`;
 }
 function openCustomer(id) {
@@ -1806,17 +1881,19 @@ function viewBank(f) {
       <div class="amt ${t.amount >= 0 ? 'in' : ''}">${t.amount >= 0 ? '+' : '−'}${money(Math.abs(t.amount))}</div>
       <div class="acts">${actions}</div></div>`;
   }
-  return `${pageHead('Банк', openN ? `<span class="badge"><span class="dot"></span>${openN} ${plural(openN, 'платёж ждёт', 'платежа ждут', 'платежей ждут')} разноски</span>` : '',
-    `<label class="btn primary" tabindex="0">${ico('upload')}Загрузить выписку CSV<input type="file" accept=".csv,text/csv,.txt" data-change="csvFile" hidden></label>`)}
+  // on a phone this screen is «Чеки»: receipts from Telegram first, the bank statement only if one was loaded on the computer
+  return `${pageHead({html: '<span class="d-only">Банк</span><span class="m-only">Чеки</span>'}, openN ? `<span class="badge"><span class="dot"></span>${openN} ${plural(openN, 'платёж ждёт', 'платежа ждут', 'платежей ждут')} разноски</span>` : '',
+    `<label class="btn primary d-only" tabindex="0">${ico('upload')}Загрузить выписку CSV<input type="file" accept=".csv,text/csv,.txt" data-change="csvFile" hidden></label>`)}
   ${tgSection(f)}
-  <details class="help"><summary>${ico('info')}Как скачать выписку</summary><ul class="small">
+  ${all.length ? '' : '<div class="m-only s tip" style="margin:4px 2px">Выписку из банка загружают на компьютере. Здесь появятся её платежи, когда она будет.</div>'}
+  <details class="help d-only"><summary>${ico('info')}Как скачать выписку</summary><ul class="small">
     <li><b>Банк</b> (Sparkasse, Volksbank, DKB, ING, N26, Commerzbank, Qonto…): в онлайн-банке «Umsätze» → «Export» → CSV.</li>
     <li><b>Revolut</b>: в приложении счёт → «⋯» → «Выписка» (Statement) → Excel/CSV → период.</li>
     <li><b>PayPal</b>: «Aktivitäten» → «Kontoauszüge» → CSV. Переводы PayPal → банк потом пропусти, чтобы не посчитать дважды.</li>
     <li>Повторная загрузка той же выписки дублей не создаёт.</li></ul></details>
-  <div class="toolbar"><label class="toggle"><input type="checkbox" data-change="inboxAll" ${UI.inboxAll ? 'checked' : ''}>Показать разнесённые и пропущенные</label>
+  <div class="toolbar ${all.length ? '' : 'd-only'}"><label class="toggle"><input type="checkbox" data-change="inboxAll" ${UI.inboxAll ? 'checked' : ''}>Показать разнесённые и пропущенные</label>
     ${(() => { const n = inboxReady(f).length; return n ? `<button type="button" class="btn primary" data-act="inboxBulk" title="Записать все платежи, для которых категория уже известна">${ico('check')}Записать все с категорией (${n})</button>` : ''; })()}</div>
-  <div class="sheet oplist">${list.length ? html : all.length ? empty('check', 'Все платежи разнесены', 'Новые появятся после следующей загрузки выписки.') : empty('bank', 'Выписка ещё не загружена', 'Скачай CSV в онлайн-банке и загрузи сюда: платежи появятся списком, останется разнести их по категориям.')}</div>`;
+  <div class="sheet oplist ${all.length ? '' : 'd-only'}">${list.length ? html : all.length ? empty('check', 'Все платежи разнесены', 'Новые появятся после следующей загрузки выписки.') : empty('bank', 'Выписка ещё не загружена', 'Скачай CSV в онлайн-банке и загрузи сюда: платежи появятся списком, останется разнести их по категориям.')}</div>`;
 }
 function parseCSV(text) {
   const sample = text.split(/\r?\n/).slice(0, 30).join('\n');
@@ -1898,12 +1975,12 @@ function euerTable(f, e, y) {
 }
 function reportEuer(f) {
   const y = UI.year, e = euer(f, y);
-  if (f.type !== 'einzel') return `<div class="note info" style="margin-bottom:14px">Для УГ прибыль считается по балансу (Bilanz), его делает Steuerberater. Здесь предварительные итоги по твоим записям: ориентир, сколько примерно заработано.</div><div class="card table-wrap">${euerTable(f, e, y)}</div>`;
+  if (f.type !== 'einzel') return `<div class="note info tip" style="margin-bottom:14px">Для УГ прибыль считается по балансу (Bilanz), его делает Steuerberater. Здесь предварительные итоги по твоим записям: ориентир, сколько примерно заработано.</div><div class="card table-wrap">${euerTable(f, e, y)}</div>`;
   return `<div class="sumstrip"><div class="fig"><span class="l">Доходы</span><span class="v in">${money(e.inSum)}</span></div><div class="fig"><span class="l">Расходы</span><span class="v">${money(e.outSum)}</span></div><div class="fig"><span class="l">Прибыль ${y}</span><span class="v ${e.profit < 0 ? 'out' : ''}">${money(e.profit)}</span></div>
       <div class="tools" style="margin-left:auto"><button class="btn" data-act="printEuer">${ico('file')}Печать / PDF</button></div></div>
     <div class="sheet table-wrap">${euerTable(f, e, y)}</div>
     ${e.nonDeductible ? `<p class="fine">${ico('info')}<span>По закону не учитывается 30% деловых обедов: ${money(e.nonDeductible)}.</span></p>` : ''}
-    <div class="note" style="margin-top:14px">Перенеси суммы в ELSTER: «Anlage EÜR» к декларации Einkommensteuer. Номера Kz указаны по формуляру Anlage EÜR. Перед подачей сверь названия строк: формуляр каждый год немного меняется. Амортизацию (AfA) дорогих вещей и авто бизнеса проверь отдельно.</div>`;
+    <div class="note tip" style="margin-top:14px">Перенеси суммы в ELSTER: «Anlage EÜR» к декларации Einkommensteuer. Номера Kz указаны по формуляру Anlage EÜR. Перед подачей сверь названия строк: формуляр каждый год немного меняется. Амортизацию (AfA) дорогих вещей и авто бизнеса проверь отдельно.</div>`;
 }
 function reportUst(f) {
   const y = UI.year; let keys = [];
@@ -1928,7 +2005,7 @@ function reportUst(f) {
     ${!f.kleinunternehmer && r.kz67 ? line(67, 'Vorsteuerbeträge aus Leistungen im Sinne des § 13b UStG', '', num2(r.kz67) + ' €') : ''}
     <tr><td class="kz">Kz 83</td><td><b>${r.kz83 >= 0 ? 'К уплате (Vorauszahlung)' : 'К возврату (Überschuss)'}</b></td><td></td><td class="num"><b>${num2(r.kz83)} €</b></td></tr>
   </tbody></table></div>
-  <div class="note" style="margin-top:12px">${f.kleinunternehmer ? 'Как Kleinunternehmer ты заполняешь только строку §13b, остальное оставляешь пустым. Вычесть этот НДС (Vorsteuer) ты не можешь, поэтому после оплаты внеси платёж в Finanzamt как расход «НДС, уплаченный в Finanzamt». ' : ''}Если поставщик не из ЕС (например, США), используется другая строка (Kz 52/53, §13b Abs. 2). Проверь, где находится фирма в счёте. Суммы без НДС ELSTER округляет до целых евро.</div>`;
+  <div class="note tip" style="margin-top:12px">${f.kleinunternehmer ? 'Как Kleinunternehmer ты заполняешь только строку §13b, остальное оставляешь пустым. Вычесть этот НДС (Vorsteuer) ты не можешь, поэтому после оплаты внеси платёж в Finanzamt как расход «НДС, уплаченный в Finanzamt». ' : ''}Если поставщик не из ЕС (например, США), используется другая строка (Kz 52/53, §13b Abs. 2). Проверь, где находится фирма в счёте. Суммы без НДС ELSTER округляет до целых евро.</div>`;
 }
 function reportExport(f) {
   return `<div class="grid g2">
@@ -1956,6 +2033,10 @@ function euerPrintHTML(f, y) {
 
 /* ---------- settings ---------- */
 const addButtons = () => `<button class="btn" data-act="addProfile">${ico('plus')}Добавить профиль</button>`;
+// the first block of the settings: hints on/off and the way to the guide
+const appCard = () => `<section class="sheet settings" style="margin-bottom:16px">${sec('Программа', 'Подсказки — это пояснения под полями и в разделах. Когда освоишься, их можно выключить.', `
+  <label class="check"><input type="checkbox" data-change="hintsToggle" ${DB.prefs && DB.prefs.hints === false ? '' : 'checked'}><span><b>Показывать подсказки и пояснения</b></span></label>
+  <div style="margin-top:14px"><button type="button" class="btn" data-act="nav" data-view="guide">${ico('book')}Обучение и экскурсия</button></div>`)}</section>`;
 const swatches = f => `<div class="swatches" role="radiogroup" aria-label="Цвет папки">${Object.entries(BINDERS).map(([k, v]) => `<label class="sw" title="${v.name}"><input type="radio" name="color" value="${k}" ${binderKey(f) === k ? 'checked' : ''} aria-label="${v.name}"><span style="--c:${v.hex}"></span></label>`).join('')}</div>`;
 const sec = (title, text, body) => `<section class="set-sec"><div class="set-aside"><h2>${title}</h2>${text ? `<p>${text}</p>` : ''}</div><div class="set-body">${body}</div></section>`;
 function viewSettings(f) {
@@ -1963,7 +2044,7 @@ function viewSettings(f) {
   const v = k => esc(f[k] || '');
   const yr = new Date().getFullYear();
   const nextNo = (f.invoicePrefix || 'RE') + '-' + yr + '-' + String(((f.invoiceCounter || {})[yr] || 0) + 1).padStart(4, '0');
-  return `${pageHead('Настройки', '', addButtons())}
+  return `${pageHead('Настройки', '', addButtons())}${appCard()}
   <form data-form="firm" class="sheet settings">
     ${sec('Профиль', 'Название печатается в счетах. Цвет папки помогает не перепутать профили.', `
       <div class="row">
@@ -2087,7 +2168,7 @@ function viewDashboardPrivate(f) {
   const yearMonths = Array.from({length: 12}, (_, i) => privStats(f, y, i + 1));
   const cmax = Math.max(1, ...yearMonths.flatMap(x => [x.inc, x.spend]));
   const months = yearMonths.map((x, i) => `<div class="mcol ${i + 1 === m ? 'now' : ''}" data-act="pmSet" data-m="${i + 1}" title="${MONTHS[i]}: поступило ${money(x.inc)}, потрачено ${money(x.spend)}"><div class="mbars"><i class="b-in" style="height:${x.inc / cmax * 100}%"></i><i class="b-out" style="height:${x.spend / cmax * 100}%"></i></div><span>${MSH[i]}</span></div>`).join('');
-  return `${pageHead(f.name || 'Личные финансы', `<span class="badge"><span class="dot"></span>Только для тебя, в налоговую не идёт</span>`, `<button class="btn primary" data-act="bkNew" data-kind="out">${ico('plus')}Трата</button><button class="btn" data-act="bkNew" data-kind="in">${ico('plus')}Поступление</button>`)}
+  return `${pageHead(f.name || 'Личные финансы', `<span class="badge"><span class="dot"></span>Только для тебя, в налоговую не идёт</span>`, `<button class="btn primary d-only" data-act="bkNew" data-kind="out">${ico('plus')}Трата</button><button class="btn d-only" data-act="bkNew" data-kind="in">${ico('plus')}Поступление</button>`).replace('class="page-head"', 'class="page-head m-hide"')}
   <section class="sheet hero" aria-label="Итоги месяца">
     <div>
       <div class="hero-top"><span class="lbl">Осталось за месяц</span>${monthStep()}</div>
@@ -2146,7 +2227,7 @@ function viewReportsPrivate(f) {
 function viewSettingsPrivate(f) {
   const b = f.budgets || {};
   const cats = catsFor(f).filter(c => c.kind === 'out' && !c.transfer && !c.savings);
-  return `${pageHead('Настройки', '', addButtons())}
+  return `${pageHead('Настройки', '', addButtons())}${appCard()}
   <form data-form="firm" class="sheet settings">
     ${sec('Профиль', 'Личные финансы хранятся отдельно от бизнеса и в налоговую не идут.', `
       <label class="field" style="max-width:360px"><span>Название</span><input type="text" name="name" value="${esc(f.name)}" required></label>
@@ -2347,6 +2428,11 @@ const DEFAULT_WEBAPP = 'https://kacharavanikoloz2004-rgb.github.io/buchhaltung-a
 function tgCard() {
   if (TGWA) return `<section class="sheet settings" style="margin-top:16px">${sec('Telegram-бот', '', `<div class="note info">${ico('check')} Ты в мини-приложении. Настройки бота и ключи меняются в программе на компьютере.</div>`)}</section>`;
   const t = DB.tg || {}, keys = !!(t.appSecret && t.tgSecret), cloud = Store.mode === 'cloud';
+  // everything is set up: a short status, the steps and keys open on demand
+  const done = t.linked && cloud && t.webAppOn && !t.diag;
+  if (done && !UI.tgOpen) return `<section class="sheet settings" data-tour="tg" style="margin-top:16px">${sec('Telegram-бот', 'Чеки с телефона и вся бухгалтерия в Telegram.', `
+    <ul class="ok-list"><li>${ico('check')}<span>Бот <b>@${esc(t.bot || '')}</b> подключён к твоему чату</span></li><li>${ico('check')}<span>Данные в облаке: телефон и компьютер видят одно и то же</span></li><li>${ico('check')}<span>Мини-приложение: кнопка «Открыть» в чате с ботом</span></li></ul>
+    <div style="margin-top:14px"><button type="button" class="btn sm" data-act="tgOpen">Изменить настройки бота</button></div>`)}</section>`;
   const copyField = (label, val) => `<label class="field"><span>${label}</span><span class="copyrow"><input type="text" readonly value="${esc(val)}"><button type="button" class="btn sm" data-act="copy" data-val="${esc(val)}">Копировать</button></span></label>`;
   const link = t.bot && t.pair ? `https://t.me/${t.bot}?start=${t.pair}` : '';
   const diag = t.diag === 'old' ? `<div class="note" style="margin-bottom:10px">В Supabase старая версия кода функции. Открой функцию → вкладка <b>Code</b> → выдели всё → вставь код из <code>telegram-bot/2-function-tg.ts</code> → <b>Deploy</b>. Потом снова нажми «Подключить бота».</div>`
@@ -2367,7 +2453,7 @@ function tgCard() {
       <li><b>Мини-приложение.</b> Адрес сайта с программой. После подключения в чате с ботом появится кнопка «Открыть».
         <form data-form="tgWebApp" class="copyrow" style="margin-top:8px"><input type="text" name="webApp" value="${esc(t.webApp || DEFAULT_WEBAPP)}" aria-label="Адрес мини-приложения"><button type="submit" class="btn sm ${cloud && !t.webAppOn ? 'primary' : ''}" ${cloud ? '' : 'disabled'}>${t.webAppOn ? 'Обновить' : 'Подключить'}</button></form>
         ${t.webAppOn ? `<div class="s" style="margin-top:6px">${ico('check')} Подключено: в чате с ботом нажми «Открыть» или отправь <code>/app</code>.</div>` : cloud ? '' : '<div class="s" style="margin-top:6px">Станет доступно после переноса в облако.</div>'}</li>
-    </ol>${status}`)}</section>`;
+    </ol>${status}${done ? `<div style="margin-top:14px"><button type="button" class="btn sm" data-act="tgOpen">Свернуть</button></div>` : ''}`)}</section>`;
 }
 
 /* ============================== guided tour ============================== */
@@ -2427,19 +2513,17 @@ const TOUR = [
   {sec: 'Меню', sel: '#side .spine.add', place: 'right', title: 'Добавить профиль',
     text: 'Здесь создаётся УГ, ещё одно ИП или профиль для личных финансов. Цвет папки потом можно поменять в настройках.'},
   {sec: 'Меню', sel: '#side .nav', place: 'right', title: 'Разделы',
-    text: '<b>Обзор</b>: главное за год. <b>Операции</b>: все доходы и расходы. <b>Счета</b> и <b>Клиенты</b>: выставить счёт. <b>Банк</b>: загрузка выписок. <b>Отчёты</b>: цифры для налоговой. Внизу настройки и это обучение.'},
+    text: '<b>Обзор</b>: главное за год. <b>Операции</b>: все доходы и расходы. <b>Счета</b>: счета клиентам, там же список клиентов. <b>Банк</b>: выписки и чеки из Telegram. <b>Отчёты</b>: цифры для налоговой. Ниже <b>Настройки</b>, в них же это обучение. На телефоне меню внизу экрана, а счета, отчёты и настройки спрятаны в «Ещё».'},
   {sec: 'Меню', sel: '#side .side-foot', place: 'right', desktopOnly: true, title: 'Сохранение',
     text: 'Здесь видно, в какой папке лежат данные и когда они последний раз сохранились. Нажимать «Сохранить» не нужно: всё записывается само.'},
-  {sec: 'Обзор', view: 'dashboard', sel: '#main .page-head .tools', title: 'Быстрые кнопки',
-    text: '<b>Расход</b>: купил что-то для бизнеса, нажал, вписал сумму. <b>Доход</b>: деньги пришли не по счёту. <b>Новый счёт</b>: выставить счёт клиенту. Ещё быстрее: перетащи файл чека прямо в окно, и сразу откроется новый расход.'},
+  {sec: 'Обзор', view: 'dashboard', sel: '#main .page-head .tools, .fab', title: 'Быстрые кнопки',
+    text: '<b>Расход</b>: купил что-то для бизнеса, нажал, вписал сумму. <b>Доход</b>: деньги пришли не по счёту. Ещё быстрее: перетащи файл чека прямо в окно, и сразу откроется новый расход. На телефоне вместо этих кнопок круглый «+» внизу справа.'},
   {sec: 'Обзор', sel: '#main .hero', title: 'Итоги года',
     text: 'Крупно прибыль за год, под ней доходы, расходы и неоплаченные счета. Стрелки ‹ › листают годы. Справа месяцы: зелёные столбики показывают доходы, серые расходы, текущий месяц подсвечен.'},
   {sec: 'Обзор', sel: '[data-tour=todo]', title: 'Нужно сделать',
     text: 'Главный блок. Сервис сам находит, что требует внимания: платежи из банка, операции без чека, просроченные счета, налог по Reverse Charge. Кнопка справа ведёт прямо туда, где это исправляется. Хорошо, когда список пустой.'},
-  {sec: 'Обзор', sel: '[data-tour=deadlines]', title: 'Сроки',
-    text: 'Ближайшие налоговые даты: декларация, авансовые платежи. Красная полоска сверху значит, что осталось меньше двух недель.'},
-  {sec: 'Обзор', sel: '[data-tour=limits]', title: 'Лимиты',
-    text: 'Сколько осталось до потолка Kleinunternehmer (25 000 € выручки в год) и до порога Gewerbesteuer (24 500 € прибыли). Когда лимит близко, полоска желтеет, потом краснеет.'},
+  {sec: 'Обзор', sel: '[data-tour=dlim]', title: 'Сроки и лимиты',
+    text: 'Ближайшая налоговая дата и сколько выручки уже набралось до потолка Kleinunternehmer (25 000 € в год). Нажми на строку, чтобы увидеть все сроки и лимиты, включая порог Gewerbesteuer. Когда до срока меньше двух недель или лимит заполнен на 80%, задача сама появится в «Нужно сделать».'},
   {sec: 'Операции', view: 'bookings', sel: '#main .toolbar', title: 'Поиск и фильтры',
     text: 'Ищи по описанию, сумме или контрагенту. Фильтруй по типу, месяцу и категории. Кнопка «Без чека» покажет записи, к которым ещё нужен документ.'},
   {sec: 'Операции', sel: '#main .sumstrip', title: 'Итоги',
@@ -2468,7 +2552,7 @@ const TOUR = [
     text: 'Так выглядит открытый счёт. «Печать / PDF»: в окне печати выбери «Сохранить как PDF» и отправь клиенту. Копия счёта сама сохраняется в папку с данными.'},
   {sec: 'Счета', modal: 'invoice', sel: '#modal form[data-form=invPaid]', title: 'Отметить оплату',
     text: 'Когда деньги пришли, укажи дату и нажми кнопку. Счёт станет оплаченным, а доход запишется сам. Ещё проще это делается через банк, сейчас покажу.'},
-  {sec: 'Банк', view: 'bank', sel: '#main .page-head .btn.primary', title: 'Загрузить выписку',
+  {sec: 'Банк', view: 'bank', sel: '#main .page-head .btn.primary', desktopOnly: true, title: 'Загрузить выписку',
     text: 'Раз в месяц скачай CSV в онлайн-банке (Umsätze → Export) и загрузи сюда. Повторная загрузка дублей не создаёт. Под кнопкой «Как скачать выписку» есть подсказки для разных банков, Revolut и PayPal.'},
   {sec: 'Банк', sel: '#main .op.bankrow', title: 'Разнести платежи',
     text: 'У каждого платежа свои кнопки. <b>Оплата RE-…</b> появляется сама, если сумма совпала с твоим счётом. <b>Разнести</b> открывает запись с готовой датой и суммой: остаётся выбрать категорию. <b>Пропустить</b>: личный платёж или перевод между своими счетами.'},
@@ -2476,7 +2560,7 @@ const TOUR = [
     text: '<b>EÜR</b>: прибыль для годовой декларации. <b>НДС</b>: цифры для USt-Voranmeldung, если она нужна. <b>Экспорт</b>: файл CSV для Excel или Steuerberater.'},
   {sec: 'Отчёты', sel: '#main .sheet.table-wrap', title: 'Готовые цифры для ELSTER',
     text: 'Каждая строка подписана номером Kz из формуляра Anlage EÜR. Раз в год переносишь эти суммы в ELSTER. Кнопка «Печать / PDF» сохраняет отчёт.'},
-  {sec: 'Настройки', view: 'settings', sel: '#main .settings .set-sec', title: 'Данные фирмы',
+  {sec: 'Настройки', view: 'settings', sel: '#main form[data-form=firm] .set-sec', title: 'Данные фирмы',
     text: 'Имя владельца, адрес, Steuernummer и IBAN печатаются в счетах. Здесь же переключатель Kleinunternehmer и цвет папки. Заполни это первым делом.'},
   {sec: 'Настройки', sel: '[data-tour=storage]', title: 'Где лежат данные',
     text: 'Перенос в другую папку, резервная копия и восстановление. Папку лучше держать в OneDrive: тогда у данных будет бэкап.'},
@@ -2490,8 +2574,8 @@ const TOUR = [
     text: 'Сервис сам находит платежи, которые повторяются каждый месяц, и считает их сумму. Удобно, чтобы найти подписки, которые уже не нужны.'},
   {sec: 'Личное', sel: '[data-tour=taxp]', title: 'Уменьшает налог',
     text: 'Медстраховка, пенсия, мастера на дом, уборка и пожертвования снижают Einkommensteuer. Они отмечаются сами по категории, а в «Отчётах» есть готовый список для декларации.'},
-  {sec: 'Готово', firm: 'biz', view: 'guide', sel: '#side .nav [data-view=guide]', place: 'right', title: 'Готово!',
-    text: 'Это всё. Экскурсию можно пройти снова в разделе «Обучение». Там же шпаргалка: что делать при покупке, раз в месяц и раз в год. После закрытия вернутся твои настоящие данные.'},
+  {sec: 'Готово', firm: 'biz', view: 'guide', sel: '#side .nav [data-view=settings], #side .nav [data-act=more]', place: 'right', title: 'Готово!',
+    text: 'Это всё. Экскурсию можно пройти снова: Настройки → «Обучение и экскурсия». Там же шпаргалка: что делать при покупке, раз в месяц и раз в год. После закрытия вернутся твои настоящие данные.'},
 ];
 // every step carries its full context, so "Назад" across sections lands on the right screen
 (() => { let v = 'dashboard', f = 'biz', t = 'euer'; for (const s of TOUR) { s.view = s.view || v; v = s.view; s.firm = s.firm || f; f = s.firm; if (s.view === 'reports') { s.repTab = s.repTab || t; t = s.repTab; } } })();
@@ -2543,8 +2627,8 @@ const Tour = {
     if (s.modal === 'invoice' && cur !== 'invoice') { openInvoiceView('demo-i2'); opened = true; }
     await new Promise(r => setTimeout(r, opened ? 240 : 30));
     if (!this.active || this.i !== i) return;
-    let el = s.sel ? $(s.sel) : null;
-    if (el && !isVis(el)) el = null;
+    // the first visible match: a step can name the desktop element and its phone twin
+    let el = s.sel ? [...document.querySelectorAll(s.sel)].find(isVis) || null : null;
     if (el) { this.scrollTo(el); await new Promise(r => setTimeout(r, 20)); }
     if (!this.active || this.i !== i) return;
     this.draw(el, s);
@@ -2583,6 +2667,8 @@ const Tour = {
       Object.assign(hole.style, {display: b > t && rr > l ? 'block' : 'none', top: t + 'px', left: l + 'px', width: (rr - l) + 'px', height: (b - t) + 'px'});
     } else hole.style.display = 'none';
     const sheet = vw <= 620; pop.classList.toggle('sheet', sheet);
+    // phone: the card sits at the bottom, unless the thing it explains is down there (menu bar, «+»)
+    pop.classList.toggle('up', sheet && !!r && r.top + r.h / 2 > vh * 0.6);
     if (sheet) { pop.style.top = ''; pop.style.left = ''; return; }
     const pw = pop.offsetWidth, ph = pop.offsetHeight; let top, left;
     if (!r) { top = (vh - ph) / 2; left = (vw - pw) / 2; }
@@ -2693,6 +2779,18 @@ const ACT = {
     navigator.clipboard.writeText(v).then(() => toast('Скопировано'), () => { const i = el.parentElement.querySelector('input'); i.select(); document.execCommand('copy'); toast('Скопировано'); });
   },
   nav: el => { UI.view = el.dataset.view; render(); window.scrollTo(0, 0); },
+  // phone: rare sections in one sheet
+  more: () => {
+    const P = isP(firm());
+    const it = (v, icon, t, s) => `<button type="button" class="more-item" data-act="moreGo" data-view="${v}">${ico(icon)}<span><b>${t}</b><span class="s">${s}</span></span>${ico('chevR')}</button>`;
+    openModal(`<div class="modal-head"><h2 style="margin:0">Ещё</h2><button type="button" class="x" data-act="close" aria-label="Закрыть">×</button></div>
+      <div class="more-list">${P ? '' : it('invoices', 'file', 'Счета и клиенты', 'Выставить счёт, отметить оплату')}${it('reports', 'chart', 'Отчёты', P ? 'Куда уходят деньги, для декларации' : 'EÜR, НДС, выгрузка для Steuerberater')}${it('settings', 'sliders', 'Настройки', P ? 'Бюджеты, подсказки' : 'Данные фирмы, бот, подсказки')}${it('guide', 'book', 'Обучение', 'Шпаргалка и экскурсия по кнопкам')}</div>`);
+  },
+  moreGo: el => { closeModal(); UI.view = el.dataset.view; render(); window.scrollTo(0, 0); },
+  dashMore: () => { UI.dashMore = !UI.dashMore; render(); },
+  bkF: () => { UI.bkF = !UI.bkF; render(); },
+  tgOpen: () => { UI.tgOpen = !UI.tgOpen; render(); },
+  rulesAll: () => { UI.rulesAll = !UI.rulesAll; render(); },
   close: () => closeModal(),
   showNoBeleg: () => { UI.view = 'bookings'; UI.bk = {month: '', kind: '', cat: '', q: '', nobeleg: true}; render(); },
   bkNew: el => openBooking(null, {kind: el.dataset.kind}),
@@ -2937,6 +3035,7 @@ const FORMS = {
   },
 };
 const CHG = {
+  hintsToggle: el => { DB.prefs = {...(DB.prefs || {}), hints: el.checked}; commit('prefs.hints', String(el.checked)); toast(el.checked ? 'Подсказки включены' : 'Подсказки скрыты. Вернуть: Настройки → «Программа»'); },
   firm: el => { UI.firmId = el.value; render(); },
   year: el => { UI.year = +el.value; render(); },
   bkFilter: el => { UI.bk[el.name] = el.type === 'checkbox' ? el.checked : el.value; if (el.name === 'kind') { UI.bk.cat = ''; render(); } else $('#bkTable').innerHTML = bookingsTable(firm()); },
